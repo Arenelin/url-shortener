@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"url-shortener/cmd/internal/config"
@@ -28,12 +27,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	i, err := storage.SaveURL("https://google.com", "google1")
+	err = storage.DeleteURL("google1")
 	if err != nil {
-		log.Error("failed to saved in storage", sl.Err(err))
+		log.Error("failed to get from storage", sl.Err(err))
 		os.Exit(1)
 	}
-	fmt.Println(i)
 	_ = storage
 }
 
