@@ -27,7 +27,7 @@ type HttpServer struct {
 func MustLoad() *Config {
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
-		configPath = "cmd/config/local.yaml"
+		configPath = "config/local.yaml"
 	}
 
 	// check if file exists

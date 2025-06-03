@@ -6,14 +6,14 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"url-shortener/cmd/internal/config"
-	"url-shortener/cmd/internal/http-server/handlers/delete"
-	"url-shortener/cmd/internal/http-server/handlers/redirect"
-	"url-shortener/cmd/internal/http-server/handlers/url/save"
-	"url-shortener/cmd/internal/http-server/middleware/logger"
-	"url-shortener/cmd/internal/lib/logger/handlers/slogpretty"
-	"url-shortener/cmd/internal/lib/logger/sl"
-	"url-shortener/cmd/internal/storage/sqlite"
+	"url-shortener/internal/config"
+	delete2 "url-shortener/internal/http-server/handlers/delete"
+	"url-shortener/internal/http-server/handlers/redirect"
+	"url-shortener/internal/http-server/handlers/url/save"
+	"url-shortener/internal/http-server/middleware/logger"
+	"url-shortener/internal/lib/logger/handlers/slogpretty"
+	"url-shortener/internal/lib/logger/sl"
+	"url-shortener/internal/storage/sqlite"
 )
 
 const (
@@ -50,7 +50,7 @@ func main() {
 			cfg.HttpServer.Admin: cfg.HttpServer.Adminpass,
 		}))
 		r.Post("/", save.New(log, storage))
-		r.Delete("/{alias}", delete.New(log, storage))
+		r.Delete("/{alias}", delete2.New(log, storage))
 	})
 
 	router.Get("/{alias}", redirect.New(log, storage))

@@ -7,11 +7,11 @@ import (
 	"github.com/go-playground/validator/v10"
 	"log/slog"
 	"net/http"
-	"url-shortener/cmd/internal/config"
-	resp "url-shortener/cmd/internal/lib/api/response"
-	"url-shortener/cmd/internal/lib/logger/sl"
-	"url-shortener/cmd/internal/lib/random"
-	"url-shortener/cmd/internal/storage"
+	"url-shortener/internal/config"
+	resp "url-shortener/internal/lib/api/response"
+	"url-shortener/internal/lib/logger/sl"
+	"url-shortener/internal/lib/random"
+	"url-shortener/internal/storage"
 )
 
 type Request struct {

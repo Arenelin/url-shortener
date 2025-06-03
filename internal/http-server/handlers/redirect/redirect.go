@@ -1,4 +1,4 @@
-package delete
+package redirect
 
 import (
 	"errors"
@@ -7,18 +7,18 @@ import (
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
-	resp "url-shortener/cmd/internal/lib/api/response"
-	"url-shortener/cmd/internal/lib/logger/sl"
-	"url-shortener/cmd/internal/storage"
+	resp "url-shortener/internal/lib/api/response"
+	"url-shortener/internal/lib/logger/sl"
+	"url-shortener/internal/storage"
 )
 
-type URLDelete interface {
-	DeleteURL(alias string) error
+type URLGetter interface {
+	GetURL(alias string) (string, error)
 }
 
-func New(log *slog.Logger, urlDelete URLDelete) http.HandlerFunc {
+func New(log *slog.Logger, urlGetter URLGetter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.url.delete.New"
+		const op = "handlers.url.redirect.New"
 		log = log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
@@ -36,7 +36,7 @@ func New(log *slog.Logger, urlDelete URLDelete) http.HandlerFunc {
 
 		log.Info("alias successfully received", slog.String("alias", alias))
 
-		err := urlDelete.DeleteURL(alias)
+		url, err := urlGetter.GetURL(alias)
 
 		if errors.Is(err, storage.ErrURLNotFound) {
 			log.Info("url not found", slog.String("alias", alias))
@@ -47,13 +47,15 @@ func New(log *slog.Logger, urlDelete URLDelete) http.HandlerFunc {
 		}
 
 		if err != nil {
-			log.Info("failed to delete url", sl.Err(err))
+			log.Info("failed to get url", sl.Err(err))
 
 			render.JSON(w, r, resp.Error("internal error"))
 			// TODO: render.Status(r, http.StatusBadRequest)
 
 			return
 		}
-		log.Info("URL deleted")
+		log.Info("got URL", slog.String("url", url))
+
+		http.Redirect(w, r, url, http.StatusFound)
 	}
 }

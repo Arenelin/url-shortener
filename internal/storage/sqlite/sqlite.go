@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"modernc.org/sqlite"
 	"strings"
-	"url-shortener/cmd/internal/storage"
+	"url-shortener/internal/storage"
 )
 
 type Storage struct {
