@@ -20,8 +20,6 @@ type HttpServer struct {
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 	User        string        `yaml:"user" env-required:"true"`
 	Password    string        `yaml:"password" env-required:"true" env:"HTTP_SERVER_PASSWORD"`
-	Admin       string        `yaml:"admin" env-required:"true"`
-	Adminpass   string        `yaml:"adminpass" env-required:"true" env:"HTTP_SERVER_ADMINPASS"`
 }
 
 func MustLoad() *Config {
