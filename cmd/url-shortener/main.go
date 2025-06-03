@@ -4,8 +4,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
+	"net/http"
 	"os"
 	"url-shortener/cmd/internal/config"
+	"url-shortener/cmd/internal/http-server/handlers/delete"
+	"url-shortener/cmd/internal/http-server/handlers/redirect"
+	"url-shortener/cmd/internal/http-server/handlers/url/save"
 	"url-shortener/cmd/internal/http-server/middleware/logger"
 	"url-shortener/cmd/internal/lib/logger/handlers/slogpretty"
 	"url-shortener/cmd/internal/lib/logger/sl"
@@ -31,11 +35,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = storage.DeleteURL("google1")
-	if err != nil {
-		log.Error("failed to get from storage", sl.Err(err))
-		os.Exit(1)
-	}
 	_ = storage
 
 	router := chi.NewRouter()
@@ -44,6 +43,33 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 	router.Use(logger.New(log))
+
+	router.Route("/url", func(r chi.Router) {
+		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
+			cfg.HttpServer.User:  cfg.HttpServer.Password,
+			cfg.HttpServer.Admin: cfg.HttpServer.Adminpass,
+		}))
+		r.Post("/", save.New(log, storage))
+		r.Delete("/{alias}", delete.New(log, storage))
+	})
+
+	router.Get("/{alias}", redirect.New(log, storage))
+
+	log.Info("starting server", slog.String("address", cfg.Address))
+
+	srv := &http.Server{
+		Addr:         cfg.Address,
+		Handler:      router,
+		ReadTimeout:  cfg.Timeout,
+		WriteTimeout: cfg.Timeout,
+		IdleTimeout:  cfg.IdleTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error("failed to start server")
+	}
+
+	log.Error("server stopped")
 }
 
 func setupLogger(env string) *slog.Logger {
