@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-func NewRandomString(length int) string {
-	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
+func NewRandomString(length int) string {
 	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 		"abcdefghijklmnopqrstuvwxyz" +
 		"0123456789")
@@ -15,7 +15,7 @@ func NewRandomString(length int) string {
 	b := make([]rune, length)
 
 	for i, _ := range b {
-		b[i] = chars[rnd.Intn(len(chars))]
+		b[i] = chars[seededRand.Intn(len(chars))]
 	}
 
 	return string(b)
