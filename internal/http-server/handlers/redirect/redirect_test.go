@@ -70,11 +70,11 @@ func TestRedirectHandler(t *testing.T) {
 
 			redirectedToURL, err := api.GetRedirect(ts.URL + "/" + tc.alias)
 
-			//if err != nil {
-			require.Equal(t, tc.respErr, err)
-			//} else {
-			assert.Equal(t, tc.url, redirectedToURL)
-			//}
+			if err != nil {
+				require.Equal(t, tc.respErr, err)
+			} else {
+				assert.Equal(t, tc.url, redirectedToURL)
+			}
 		})
 	}
 }
