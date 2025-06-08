@@ -12,6 +12,7 @@ import (
 	"url-shortener/internal/storage"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.53.4 --name=URLGetter
 type URLGetter interface {
 	GetURL(alias string) (string, error)
 }
