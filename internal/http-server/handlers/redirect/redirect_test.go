@@ -14,6 +14,7 @@ import (
 	"url-shortener/internal/http-server/handlers/redirect/mocks"
 	"url-shortener/internal/lib/api"
 	"url-shortener/internal/lib/logger/handlers/slogdiscard"
+	"url-shortener/internal/storage"
 )
 
 func TestRedirectHandler(t *testing.T) {
@@ -40,7 +41,7 @@ func TestRedirectHandler(t *testing.T) {
 			url:     "https://site.com",
 			alias:   "site",
 			respErr: fmt.Errorf("%s: %w: %d", api.GetRedirectOp, api.ErrInvalidStatusCode, http.StatusOK),
-			mockErr: errors.New("url not found"),
+			mockErr: storage.ErrURLNotFound,
 		},
 		{
 			name:    "Unexpected database error",
