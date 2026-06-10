@@ -42,15 +42,14 @@ func main() {
 	router.Use(middleware.URLFormat)
 	router.Use(logger.New(log))
 
-	router.Route("/url", func(r chi.Router) {
-		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
+	router.Route("/tasks", func(r chi.Router) {
+		r.Use(middleware.BasicAuth("todolist", map[string]string{
 			cfg.HttpServer.User: cfg.HttpServer.Password,
 		}))
+		r.Get("/", redirect.New(log, storage))
 		r.Post("/", save.New(log, storage))
 		r.Delete("/{alias}", delete2.New(log, storage))
 	})
-
-	router.Get("/{alias}", redirect.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 

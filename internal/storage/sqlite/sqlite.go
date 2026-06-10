@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"modernc.org/sqlite"
 	"strings"
@@ -22,11 +21,10 @@ func New(storagePath string) (*Storage, error) {
 	}
 
 	stmt, err := db.Prepare(`
-CREATE TABLE IF NOT EXISTS url(
+CREATE TABLE IF NOT EXISTS task(
     id INTEGER PRIMARY KEY,
-    alias TEXT NOT NULL UNIQUE,
-    url TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS idx_alias ON url(alias);
+    taskName TEXT NOT NULL UNIQUE,
+    isDone BOOLEAN NOT NULL DEFAULT false);
 `)
 	if err != nil {
 		return nil, fmt.Errorf(op, err)
@@ -40,19 +38,19 @@ CREATE INDEX IF NOT EXISTS idx_alias ON url(alias);
 	return &Storage{db: db}, nil
 }
 
-func (s *Storage) SaveURL(urlToSave, alias string) (int64, error) {
-	const op = "storage.sqlite.SaveURL"
+func (s *Storage) CreateTask(taskName string) (int64, error) {
+	const op = "storage.sqlite.CreateTask"
 
-	stmt, err := s.db.Prepare("INSERT INTO url(url, alias) VALUES (?, ?)")
+	stmt, err := s.db.Prepare("INSERT INTO task(taskName) VALUES (?)")
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	res, err := stmt.Exec(urlToSave, alias)
+	res, err := stmt.Exec(taskName)
 	if err != nil {
 		if sqlErr, ok := err.(*sqlite.Error); ok {
 			if strings.Contains(sqlErr.Error(), "UNIQUE constraint failed") {
-				return 0, fmt.Errorf("%s: %w", op, storage.ErrURLExists)
+				return 0, fmt.Errorf("%s: %w", op, storage.ErrTaskExists)
 			}
 		}
 		return 0, fmt.Errorf("%s: %w", op, err)
@@ -66,24 +64,35 @@ func (s *Storage) SaveURL(urlToSave, alias string) (int64, error) {
 	return id, nil
 }
 
-func (s *Storage) GetURL(alias string) (string, error) {
-	const op = "storage.sqlite.GetURL"
+func (s *Storage) GetAllTasks() ([]string, error) {
+	const op = "storage.sqlite.GetAllTasks"
 
-	stmt, err := s.db.Prepare("SELECT url FROM url WHERE alias = ?")
+	stmt, err := s.db.Prepare("SELECT taskName FROM task")
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+	defer stmt.Close()
 
-	var resURL string
-	err = stmt.QueryRow(alias).Scan(&resURL)
+	rows, err := stmt.Query()
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "", fmt.Errorf("%s: %w", op, storage.ErrURLNotFound)
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var resTasks []string
+	for rows.Next() {
+		var taskName string
+		if err := rows.Scan(&taskName); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		return "", fmt.Errorf("%s: %w", op, err)
+		resTasks = append(resTasks, taskName)
 	}
 
-	return resURL, nil
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resTasks, nil
 }
 
 func (s *Storage) DeleteURL(alias string) error {
