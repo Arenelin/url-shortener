@@ -17,12 +17,12 @@ type Request struct {
 
 type Response struct {
 	resp.Response
-	TaskName string `json:"taskName,omitempty"`
+	Task storage.TaskStructure `json:"task,omitempty"`
 }
 
 //go:generate go run github.com/vektra/mockery/v2@v2.53.4 --name=URLSaver
 type TaskSaver interface {
-	CreateTask(taskName string) (int64, error)
+	CreateTask(taskName string) (storage.TaskStructure, error)
 }
 
 func New(log *slog.Logger, taskSaver TaskSaver) http.HandlerFunc {
@@ -57,7 +57,7 @@ func New(log *slog.Logger, taskSaver TaskSaver) http.HandlerFunc {
 
 		taskName := req.TaskName
 
-		id, err := taskSaver.CreateTask(taskName)
+		createdTask, err := taskSaver.CreateTask(taskName)
 
 		if errors.Is(err, storage.ErrTaskExists) {
 			log.Info("task already exists", slog.String("task", req.TaskName))
@@ -75,15 +75,15 @@ func New(log *slog.Logger, taskSaver TaskSaver) http.HandlerFunc {
 
 			return
 		}
-		log.Info("url added", slog.Int64("id", id))
+		log.Info("task added", slog.String("task name", *createdTask.TaskName))
 
-		responseOK(w, r, taskName)
+		responseOK(w, r, createdTask)
 	}
 }
 
-func responseOK(w http.ResponseWriter, r *http.Request, taskName string) {
-	render.JSON(w, r, Response{
-		Response: resp.OK(), TaskName: taskName,
-	})
+func responseOK(w http.ResponseWriter, r *http.Request, task storage.TaskStructure) {
 	render.Status(r, http.StatusCreated)
+	render.JSON(w, r, Response{
+		Response: resp.OK(), Task: task,
+	})
 }

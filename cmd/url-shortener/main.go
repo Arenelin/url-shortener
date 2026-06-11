@@ -9,6 +9,7 @@ import (
 	"url-shortener/internal/config"
 	delete2 "url-shortener/internal/http-server/handlers/delete"
 	"url-shortener/internal/http-server/handlers/redirect"
+	"url-shortener/internal/http-server/handlers/update"
 	"url-shortener/internal/http-server/handlers/url/save"
 	"url-shortener/internal/http-server/middleware/logger"
 	"url-shortener/internal/lib/logger/handlers/slogpretty"
@@ -48,7 +49,8 @@ func main() {
 		}))
 		r.Get("/", redirect.New(log, storage))
 		r.Post("/", save.New(log, storage))
-		r.Delete("/{alias}", delete2.New(log, storage))
+		r.Patch("/", update.New(log, storage))
+		r.Delete("/{id}", delete2.New(log, storage))
 	})
 
 	log.Info("starting server", slog.String("address", cfg.Address))
