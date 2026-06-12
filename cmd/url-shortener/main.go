@@ -23,6 +23,30 @@ const (
 	envProd  = "prod"
 )
 
+// CORSRouterDecorator оборачивает chi.Router для обработки CORS
+type CORSRouterDecorator struct {
+	R chi.Router
+}
+
+func (c *CORSRouterDecorator) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	if origin := req.Header.Get("Origin"); origin != "" {
+		// Разрешаем запросы с вашей локалки и продакшена
+		if origin == "http://localhost:3000" || origin == "https://my-todo.online" {
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, PATCH, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Accept-Language, Content-Type, Authorization")
+		rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	}
+
+	// Если это Preflight-запрос OPTIONS, останавливаемся здесь
+	if req.Method == "OPTIONS" {
+		return
+	}
+
+	c.R.ServeHTTP(rw, req)
+}
+
 func main() {
 	cfg := config.MustLoad()
 	log := setupLogger(cfg.Env)
@@ -57,7 +81,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         cfg.Address,
-		Handler:      router,
+		Handler:      &CORSRouterDecorator{R: router},
 		ReadTimeout:  cfg.Timeout,
 		WriteTimeout: cfg.Timeout,
 		IdleTimeout:  cfg.IdleTimeout,
