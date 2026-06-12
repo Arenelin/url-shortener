@@ -69,9 +69,9 @@ func main() {
 	router.Use(logger.New(log))
 
 	router.Route("/tasks", func(r chi.Router) {
-		r.Use(middleware.BasicAuth("todolist", map[string]string{
-			cfg.HttpServer.User: cfg.HttpServer.Password,
-		}))
+		//r.Use(middleware.BasicAuth("todolist", map[string]string{
+		//	cfg.HttpServer.User: cfg.HttpServer.Password,
+		//}))
 		r.Get("/", redirect.New(log, storage))
 		r.Post("/", save.New(log, storage))
 		r.Patch("/", update.New(log, storage))
