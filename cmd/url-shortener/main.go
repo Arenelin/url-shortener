@@ -41,6 +41,7 @@ func (c *CORSRouterDecorator) ServeHTTP(rw http.ResponseWriter, req *http.Reques
 
 	// Если это Preflight-запрос OPTIONS, останавливаемся здесь
 	if req.Method == "OPTIONS" {
+		rw.WriteHeader(http.StatusOK)
 		return
 	}
 
