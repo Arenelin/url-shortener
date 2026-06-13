@@ -20,7 +20,7 @@ type TaskDelete interface {
 
 func New(log *slog.Logger, taskDelete TaskDelete) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.task.delete.New"
+		const op = "handlers.task.delete.NewRequest"
 		log = log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
