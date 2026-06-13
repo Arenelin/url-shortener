@@ -18,12 +18,12 @@ type Request struct {
 
 type Response struct {
 	resp.Response
-	Task storage.Task `json:"task,required"`
+	Task storage.TaskStructure `json:"task,required"`
 }
 
 //go:generate go run github.com/vektra/mockery/v2@v2.53.4 --name=URLDelete
 type TaskUpdate interface {
-	UpdateTask(id int64, task storage.Task) (storage.Task, error)
+	UpdateTask(id int64, task storage.Task) (storage.TaskStructure, error)
 }
 
 func New(log *slog.Logger, taskUpdate TaskUpdate) http.HandlerFunc {
@@ -88,7 +88,7 @@ func New(log *slog.Logger, taskUpdate TaskUpdate) http.HandlerFunc {
 	}
 }
 
-func responseOK(w http.ResponseWriter, r *http.Request, updatedTask storage.Task) {
+func responseOK(w http.ResponseWriter, r *http.Request, updatedTask storage.TaskStructure) {
 	render.JSON(w, r, Response{
 		Response: resp.OK(), Task: updatedTask,
 	})

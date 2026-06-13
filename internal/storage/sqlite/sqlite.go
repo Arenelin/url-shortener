@@ -75,7 +75,7 @@ func (s *Storage) CreateTask(taskName string) (storage.TaskStructure, error) {
 	return createdTask, nil
 }
 
-func (s *Storage) UpdateTask(id int64, task storage.Task) (storage.Task, error) {
+func (s *Storage) UpdateTask(id int64, task storage.Task) (storage.TaskStructure, error) {
 	const op = "storage.sqlite.UpdateTask"
 
 	var columns []string
@@ -99,7 +99,7 @@ func (s *Storage) UpdateTask(id int64, task storage.Task) (storage.Task, error) 
 
 		stmt, err := s.db.Prepare(query)
 		if err != nil {
-			return storage.Task{}, fmt.Errorf("%s: %w", op, err)
+			return storage.TaskStructure{}, fmt.Errorf("%s: %w", op, err)
 		}
 		defer stmt.Close()
 
@@ -107,34 +107,35 @@ func (s *Storage) UpdateTask(id int64, task storage.Task) (storage.Task, error) 
 		if err != nil {
 			if sqlErr, ok := err.(*sqlite.Error); ok {
 				if strings.Contains(sqlErr.Error(), "UNIQUE constraint failed") {
-					return storage.Task{}, fmt.Errorf("%s: %w", op, storage.ErrTaskExists)
+					return storage.TaskStructure{}, fmt.Errorf("%s: %w", op, storage.ErrTaskExists)
 				}
 			}
-			return storage.Task{}, fmt.Errorf("%s: %w", op, err)
+			return storage.TaskStructure{}, fmt.Errorf("%s: %w", op, err)
 		}
 
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return storage.Task{}, fmt.Errorf("%s: %w", op, err)
+			return storage.TaskStructure{}, fmt.Errorf("%s: %w", op, err)
 		}
 		if rowsAffected == 0 {
-			return storage.Task{}, fmt.Errorf("%s: task not found", op)
+			return storage.TaskStructure{}, fmt.Errorf("%s: task not found", op)
 		}
 	}
 
 	// 2. Читаем обновленный объект из базы данных
-	var updatedTask storage.Task
+	var updatedTask storage.TaskStructure
 	var name string
 	var done bool
 
 	selectQuery := "SELECT taskName, isDone FROM task WHERE id = ?"
 	err := s.db.QueryRow(selectQuery, id).Scan(&name, &done)
 	if err != nil {
-		return storage.Task{}, fmt.Errorf("%s: select updated task failed: %w", op, err)
+		return storage.TaskStructure{}, fmt.Errorf("%s: select updated task failed: %w", op, err)
 	}
 
 	updatedTask.TaskName = &name
 	updatedTask.IsDone = &done
+	updatedTask.Id = &id
 
 	return updatedTask, nil
 }
