@@ -139,10 +139,10 @@ func (s *Storage) UpdateTask(id int64, task storage.Task) (storage.Task, error) 
 	return updatedTask, nil
 }
 
-func (s *Storage) GetAllTasks() ([]string, error) {
+func (s *Storage) GetAllTasks() ([]storage.TaskStructure, error) {
 	const op = "storage.sqlite.GetAllTasks"
 
-	stmt, err := s.db.Prepare("SELECT taskName FROM task")
+	stmt, err := s.db.Prepare("SELECT taskName, isDone, id FROM task")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -154,13 +154,15 @@ func (s *Storage) GetAllTasks() ([]string, error) {
 	}
 	defer rows.Close()
 
-	var resTasks []string
+	var resTasks []storage.TaskStructure
 	for rows.Next() {
 		var taskName string
-		if err := rows.Scan(&taskName); err != nil {
+		var isDone bool
+		var id int64
+		if err := rows.Scan(&taskName, &isDone, &id); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		resTasks = append(resTasks, taskName)
+		resTasks = append(resTasks, storage.TaskStructure{Id: &id, IsDone: &isDone, TaskName: &taskName})
 	}
 
 	if err = rows.Err(); err != nil {

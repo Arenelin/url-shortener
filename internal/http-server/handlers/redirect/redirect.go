@@ -7,16 +7,17 @@ import (
 	"net/http"
 	resp "url-shortener/internal/lib/api/response"
 	"url-shortener/internal/lib/logger/sl"
+	"url-shortener/internal/storage"
 )
 
 type Response struct {
 	resp.Response
-	Tasks []string `json:"tasks"`
+	Tasks []storage.TaskStructure `json:"tasks"`
 }
 
 //go:generate go run github.com/vektra/mockery/v2@v2.53.4 --name=URLGetter
 type TasksGetter interface {
-	GetAllTasks() ([]string, error)
+	GetAllTasks() ([]storage.TaskStructure, error)
 }
 
 func New(log *slog.Logger, tasksGetter TasksGetter) http.HandlerFunc {
@@ -48,7 +49,7 @@ func New(log *slog.Logger, tasksGetter TasksGetter) http.HandlerFunc {
 	}
 }
 
-func responseOK(w http.ResponseWriter, r *http.Request, tasks []string) {
+func responseOK(w http.ResponseWriter, r *http.Request, tasks []storage.TaskStructure) {
 	render.JSON(w, r, Response{
 		Response: resp.OK(), Tasks: tasks,
 	})
